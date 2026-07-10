@@ -3,9 +3,9 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "notarius"
-version = "0.1.0"
-description = "Historical Schematism Indexing & Extraction Engine"
+name = "ecclesiastical-schematism-extraction"
+version = "1.0.0"
+description = "Code artifact for sequential extraction from ecclesiastical schematisms"
 authors = [
     {name = "Artur Podsiadły", email = "artpods56@gmail.com"}
 ]
@@ -68,6 +68,9 @@ dependencies = [
     "pdfplumber>=0.11.7",
     "ty>=0.0.5",
 ]
+
+[project.scripts]
+schematism-artifact = "notarius.article.cli:app"
 
 [project.optional-dependencies]
 # Used for language detection in the pipeline

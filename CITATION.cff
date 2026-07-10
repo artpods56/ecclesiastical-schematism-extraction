@@ -1,0 +1,51 @@
+cff-version: 1.2.0
+message: "Please cite both this software artifact and the accompanying article."
+title: "Ecclesiastical Schematism Extraction: Article Code Artifact"
+type: software
+version: 1.0.0
+date-released: 2026-07-10
+url: "https://github.com/artpods56/ecclesiastical-schematism-extraction"
+repository-code: "https://github.com/artpods56/ecclesiastical-schematism-extraction"
+license: MIT
+authors:
+  - family-names: "Słoń"
+    given-names: "Marek"
+  - family-names: "Podsiadły"
+    given-names: "Artur"
+  - family-names: "Chomentowska"
+    given-names: "Edyta"
+  - family-names: "Kumor-Mielnik"
+    given-names: "Joanna"
+  - family-names: "Kozyrski"
+    given-names: "Robert"
+  - family-names: "Kozera"
+    given-names: "Sebastian"
+  - family-names: "Garbacz"
+    given-names: "Paweł"
+  - family-names: "Kulicki"
+    given-names: "Piotr"
+  - family-names: "Kupczewska"
+    given-names: "Monika"
+preferred-citation:
+  type: article
+  title: "The Use of Advanced Digital Tools in Documentary Work on the Historical Geography of the Church"
+  year: 2026
+  authors:
+    - family-names: "Słoń"
+      given-names: "Marek"
+    - family-names: "Podsiadły"
+      given-names: "Artur"
+    - family-names: "Chomentowska"
+      given-names: "Edyta"
+    - family-names: "Kumor-Mielnik"
+      given-names: "Joanna"
+    - family-names: "Kozyrski"
+      given-names: "Robert"
+    - family-names: "Kozera"
+      given-names: "Sebastian"
+    - family-names: "Garbacz"
+      given-names: "Paweł"
+    - family-names: "Kulicki"
+      given-names: "Piotr"
+    - family-names: "Kupczewska"
+      given-names: "Monika"

@@ -8,28 +8,33 @@ or the persistence layer.
 """
 
 import asyncio
+import base64
+import io
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Never, final, override
+from typing import final, override
 
 import pytest
+from PIL import Image
 from pydantic import BaseModel
 
 from notarius.application.ports.outbound.cached_engine import CachedEngine
 from notarius.application.ports.outbound.engine import ConfigurableEngine
 from notarius.domain.entities.completions import BaseProviderResponse
 from notarius.domain.entities.messages import ChatMessage, TextContent, ImageContent
-from notarius.domain.protocols import BaseRequest, BaseResponse
 from notarius.infrastructure.cache.adapters.llm import LLMCache
 from notarius.infrastructure.cache.backends.llm import (
     LLMCacheBackend,
     LLMCacheKeyGenerator,
-    create_llm_cache_backend,
 )
 from notarius.infrastructure.llm.conversation import Conversation
 from notarius.infrastructure.llm.engine_adapter import (
     CompletionRequest,
     CompletionResult,
+)
+from notarius.infrastructure.persistence.storage.local import (
+    ImageRepository,
+    LocalFileStorage,
 )
 
 
@@ -58,7 +63,9 @@ class MockLLMConfig(BaseModel):
 
 
 @final
-class MockLLMEngine(ConfigurableEngine[MockLLMConfig, CompletionRequest, CompletionResult]):
+class MockLLMEngine(
+    ConfigurableEngine[MockLLMConfig, CompletionRequest, CompletionResult]
+):
     """Mock LLM engine that simulates API calls."""
 
     def __init__(self, config: MockLLMConfig):
@@ -126,31 +133,59 @@ def key_generator() -> LLMCacheKeyGenerator:
 
 
 @pytest.fixture
-def cache_backend(llm_cache: LLMCache, key_generator: LLMCacheKeyGenerator) -> LLMCacheBackend:
+def image_repository(tmp_path: Path) -> ImageRepository:
+    """Create an image repository used by the cache backend."""
+    image_root = tmp_path / "images"
+    image_root.mkdir()
+    return ImageRepository(LocalFileStorage(image_root))
+
+
+@pytest.fixture
+def cache_backend(
+    llm_cache: LLMCache,
+    key_generator: LLMCacheKeyGenerator,
+    image_repository: ImageRepository,
+) -> LLMCacheBackend:
     """Create cache backend."""
-    return LLMCacheBackend(cache=llm_cache, key_generator=key_generator)
+    return LLMCacheBackend(
+        cache=llm_cache,
+        key_generator=key_generator,
+        image_repository=image_repository,
+    )
 
 
 def create_test_conversation(user_text: str) -> Conversation:
     """Create a test conversation."""
-    return Conversation.from_messages([
-        ChatMessage(role="system", content=[TextContent(text="You are helpful")]),
-        ChatMessage(role="user", content=[TextContent(text=user_text)]),
-    ])
+    return Conversation.from_messages(
+        [
+            ChatMessage(role="system", content=[TextContent(text="You are helpful")]),
+            ChatMessage(role="user", content=[TextContent(text=user_text)]),
+        ]
+    )
 
 
-def create_image_conversation(user_text: str, image_data: str = "abc123") -> Conversation:
+def create_image_conversation(
+    user_text: str, image_data: str | None = None
+) -> Conversation:
     """Create a conversation with an image."""
-    return Conversation.from_messages([
-        ChatMessage(role="system", content=[TextContent(text="You are helpful")]),
-        ChatMessage(
-            role="user",
-            content=[
-                TextContent(text=user_text),
-                ImageContent(image_url=f"data:image/jpeg;base64,{image_data}", detail="high"),
-            ],
-        ),
-    ])
+    if image_data is None:
+        buffer = io.BytesIO()
+        Image.new("RGB", (1, 1), color="white").save(buffer, format="JPEG")
+        image_data = base64.b64encode(buffer.getvalue()).decode("ascii")
+    return Conversation.from_messages(
+        [
+            ChatMessage(role="system", content=[TextContent(text="You are helpful")]),
+            ChatMessage(
+                role="user",
+                content=[
+                    TextContent(text=user_text),
+                    ImageContent(
+                        image_url=f"data:image/jpeg;base64,{image_data}", detail="high"
+                    ),
+                ],
+            ),
+        ]
+    )
 
 
 class TestCachedEngineWithDiskcache:
@@ -224,7 +259,9 @@ class TestCachedEngineWithDiskcache:
         response2 = await cached_engine.process_async(request2)
 
         # Engine should NOT have been called again
-        assert mock_llm_engine.async_call_count == 1, "Engine was called twice - cache miss!"
+        assert mock_llm_engine.async_call_count == 1, (
+            "Engine was called twice - cache miss!"
+        )
         assert response1.output.text_response == response2.output.text_response
 
     @pytest.mark.asyncio
@@ -284,12 +321,12 @@ class TestCachedEngineWithDiskcache:
 
         # Create request with image
         request = CompletionRequest(
-            input=create_image_conversation("What is in this image?", "base64imagedata"),
+            input=create_image_conversation("What is in this image?"),
             structured_output=None,
         )
 
         # Execute
-        response = await cached_engine.process_async(request)
+        await cached_engine.process_async(request)
         assert mock_llm_engine.async_call_count == 1
 
         # Verify cached
@@ -299,7 +336,7 @@ class TestCachedEngineWithDiskcache:
 
         # Second request should hit
         request2 = CompletionRequest(
-            input=create_image_conversation("What is in this image?", "base64imagedata"),
+            input=create_image_conversation("What is in this image?"),
             structured_output=None,
         )
         await cached_engine.process_async(request2)
@@ -322,7 +359,9 @@ class TestCacheKeyDeterminism:
 
         assert key1 == key2
 
-    def test_same_image_conversation_same_key(self, key_generator: LLMCacheKeyGenerator):
+    def test_same_image_conversation_same_key(
+        self, key_generator: LLMCacheKeyGenerator
+    ):
         """Test identical image conversations produce identical keys."""
         conv1 = create_image_conversation("Describe", "imagedata123")
         conv2 = create_image_conversation("Describe", "imagedata123")
@@ -335,7 +374,9 @@ class TestCacheKeyDeterminism:
 
         assert key1 == key2
 
-    def test_different_image_data_different_key(self, key_generator: LLMCacheKeyGenerator):
+    def test_different_image_data_different_key(
+        self, key_generator: LLMCacheKeyGenerator
+    ):
         """Test different image data produces different keys."""
         conv1 = create_image_conversation("Describe", "imagedata_A")
         conv2 = create_image_conversation("Describe", "imagedata_B")
@@ -356,13 +397,18 @@ class TestCachePersistence:
     async def test_cache_persists_across_cached_engine_instances(
         self,
         tmp_cache_dir: Path,
+        image_repository: ImageRepository,
     ):
         """Test that cached results persist when creating new CachedEngine instances."""
         # First engine instance
         engine1 = MockLLMEngine(MockLLMConfig(model_name="test"))
         cache1 = LLMCache(model_name="test-model", caches_dir=tmp_cache_dir)
         keygen1 = LLMCacheKeyGenerator()
-        backend1 = LLMCacheBackend(cache=cache1, key_generator=keygen1)
+        backend1 = LLMCacheBackend(
+            cache=cache1,
+            key_generator=keygen1,
+            image_repository=image_repository,
+        )
         cached_engine1 = CachedEngine(
             engine=engine1,
             cache_backend=backend1,
@@ -383,7 +429,11 @@ class TestCachePersistence:
         engine2 = MockLLMEngine(MockLLMConfig(model_name="test"))
         cache2 = LLMCache(model_name="test-model", caches_dir=tmp_cache_dir)
         keygen2 = LLMCacheKeyGenerator()
-        backend2 = LLMCacheBackend(cache=cache2, key_generator=keygen2)
+        backend2 = LLMCacheBackend(
+            cache=cache2,
+            key_generator=keygen2,
+            image_repository=image_repository,
+        )
         cached_engine2 = CachedEngine(
             engine=engine2,
             cache_backend=backend2,
@@ -418,7 +468,9 @@ class TestDiskcacheSetReturnValue:
     ):
         """Verify diskcache.set() returns True on successful write."""
         conv = create_test_conversation("Test")
-        response = MockLLMResponse(structured_response=None, text_response="Test response")
+        response = MockLLMResponse(
+            structured_response=None, text_response="Test response"
+        )
         result = CompletionResult(
             output=response,
             conversation=conv.add(

@@ -95,7 +95,7 @@ class TestSimilarityEvaluationService:
             "parish": ("parish_a", "parish_b"),
             "deanery": ("deanery_a", "deanery_b"),
         }
-        metrics_list = service.evaluate(sample_df, columns)
+        metrics_list = service.evaluate(sample_df, columns).metrics
 
         assert len(metrics_list) == 2
         assert all(isinstance(m, SimilarityMetrics) for m in metrics_list)
@@ -306,7 +306,7 @@ class TestClassificationEvaluationService:
             "deanery": ("deanery_a", "deanery_b"),
             "building_material": ("building_material_a", "building_material_b"),
         }
-        metrics_list = service.evaluate(sample_df, columns)
+        metrics_list = service.evaluate(sample_df, columns).metrics
 
         assert len(metrics_list) == 3
         assert all(isinstance(m, ClassificationMetrics) for m in metrics_list)

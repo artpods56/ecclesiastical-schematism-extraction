@@ -1,5 +1,4 @@
 import random
-from typing import cast
 
 import dagster as dg
 from dagster import AssetIn, AssetExecutionContext, MetadataValue
@@ -37,11 +36,9 @@ from notarius.orchestration.constants import (
     Kinds,
 )
 from notarius.orchestration.resources.base import (
-    OCREngineResource,
     LMv3EngineResource,
     LLMEngineResource,
 )
-from notarius.orchestration.resources.storage import ImageRepositoryResource
 from notarius.schemas.data.pipeline import (
     BaseDataset,
     BaseDataItem,
@@ -86,7 +83,6 @@ async def pred__ocr_enriched_dataset__pydantic(
     images_repository: dg.ResourceParam[ImageRepository],
     ocr_engine: dg.ResourceParam[OCREngine],
 ):
-
     config = ocr_engine.config
 
     use_case = EnrichDatasetWithOCR(
@@ -191,7 +187,8 @@ async def pred__lmv3_enriched_dataset__pydantic(
 
 class LLMConfig(dg.Config):
     model_name: str = "google/gemini-3-flash-preview"
-    context_strategy: str = "sliding_window"
+    context_strategy: ContextStrategySelection = "sliding_window"
+    context_window_size: int = 5
     task_name: str = "structured_extraction"
     enable_cache: bool = True
     group_by_schematism_name: bool = True
@@ -235,8 +232,9 @@ async def pred__llm_enriched_dataset__pydantic(
     )
 
     context_strategy = get_context_strategy(
-        strategy_literal=cast(ContextStrategySelection, config.context_strategy),
+        strategy_literal=config.context_strategy,
         message_builder=message_builder,
+        sliding_window_size=config.context_window_size,
     )
 
     dataset_processor = DatasetProcessor(

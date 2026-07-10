@@ -1,0 +1,56 @@
+{
+  "schematism_id": "wloclawek_1872",
+  "filename": "0010.jpg",
+  "source_form": {
+    "reference": {
+      "page_number": "10",
+      "entries": [
+        {
+          "deanery": "Decanatus Vladislaviensis",
+          "parish": "Włocławek",
+          "dedication": "S. Joan. Bapt.",
+          "building_material": "murata"
+        }
+      ]
+    },
+    "prediction": {
+      "page_number": "10",
+      "entries": [
+        {
+          "deanery": "Decanatus Vladislaviensis",
+          "parish": "Włocławek",
+          "dedication": "S. Joan. Bapt.",
+          "building_material": "murata"
+        }
+      ]
+    },
+    "precision": 1.0,
+    "recall": 1.0,
+    "f1": 1.0
+  },
+  "parsed_form": {
+    "reference": {
+      "entries": [
+        {
+          "deanery": "Włocławek",
+          "parish": "Włocławek",
+          "dedication": "Jan Chrzciciel",
+          "building_material": "mr"
+        }
+      ]
+    },
+    "prediction": {
+      "entries": [
+        {
+          "deanery": "Władysławów",
+          "parish": "Włocławek",
+          "dedication": "Jan Chrzciciel",
+          "building_material": "mr"
+        }
+      ]
+    },
+    "precision": 0.75,
+    "recall": 0.75,
+    "f1": 0.75
+  }
+}

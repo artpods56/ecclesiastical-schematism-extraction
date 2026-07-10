@@ -37,7 +37,7 @@ clients:
       top_p: 0.9
   openrouter:
     backend: openrouter
-    model: google/gemini-2.5-flash-preview
+    model: google/gemini-3-flash-preview
     base_url: https://openrouter.ai/api/v1
     api_key_env_var: OPENROUTER_API_KEY
     structured_output: false

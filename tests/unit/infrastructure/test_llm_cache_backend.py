@@ -19,6 +19,10 @@ from notarius.infrastructure.llm.engine_adapter import (
     CompletionRequest,
     CompletionResult,
 )
+from notarius.infrastructure.persistence.storage.local import (
+    ImageRepository,
+    LocalFileStorage,
+)
 
 
 # Test fixtures
@@ -62,11 +66,25 @@ def key_generator() -> LLMCacheKeyGenerator:
 
 
 @pytest.fixture
+def image_repository(tmp_path: Path) -> ImageRepository:
+    """Create an image repository used by the cache backend."""
+    image_root = tmp_path / "images"
+    image_root.mkdir()
+    return ImageRepository(LocalFileStorage(image_root))
+
+
+@pytest.fixture
 def cache_backend(
-    llm_cache: LLMCache, key_generator: LLMCacheKeyGenerator
+    llm_cache: LLMCache,
+    key_generator: LLMCacheKeyGenerator,
+    image_repository: ImageRepository,
 ) -> LLMCacheBackend:
     """Create a cache backend."""
-    return LLMCacheBackend(cache=llm_cache, key_generator=key_generator)
+    return LLMCacheBackend(
+        cache=llm_cache,
+        key_generator=key_generator,
+        image_repository=image_repository,
+    )
 
 
 @pytest.fixture
@@ -335,9 +353,11 @@ class TestLLMCacheBackendIntegration:
 class TestCreateLLMCacheBackend:
     """Test factory function for creating cache backend."""
 
-    def test_creates_backend_and_keygen(self, tmp_cache_dir: Path) -> None:
+    def test_creates_backend_and_keygen(
+        self, image_repository: ImageRepository
+    ) -> None:
         """Test that factory creates both backend and key generator."""
-        backend, keygen = create_llm_cache_backend("test-model")
+        backend, keygen = create_llm_cache_backend("test-model", image_repository)
 
         assert isinstance(backend, LLMCacheBackend)
         assert isinstance(keygen, LLMCacheKeyGenerator)
@@ -345,9 +365,10 @@ class TestCreateLLMCacheBackend:
     def test_factory_created_backend_works(
         self,
         sample_result: CompletionResult,
+        image_repository: ImageRepository,
     ) -> None:
         """Test that factory-created backend is functional."""
-        backend, keygen = create_llm_cache_backend("test-model")
+        backend, keygen = create_llm_cache_backend("test-model", image_repository)
 
         key = "factory_test"
         backend.set(key, sample_result)
@@ -359,10 +380,11 @@ class TestCreateLLMCacheBackend:
     def test_different_model_names_create_separate_caches(
         self,
         sample_result: CompletionResult,
+        image_repository: ImageRepository,
     ) -> None:
         """Test that different model names use separate caches."""
-        backend1, _ = create_llm_cache_backend("model-1")
-        backend2, _ = create_llm_cache_backend("model-2")
+        backend1, _ = create_llm_cache_backend("model-1", image_repository)
+        backend2, _ = create_llm_cache_backend("model-2", image_repository)
 
         key = "same_key"
 

@@ -1,5 +1,5 @@
 import abc
-import dataclasses
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import final, override
 
@@ -79,7 +79,6 @@ class MetricAggregate[T: FieldEvaluationMetrics](abc.ABC):
 
 @dataclass(frozen=True)
 class ClassificationAggregate(MetricAggregate[ClassificationMetrics]):
-
     @override
     def to_dataframe(self) -> pd.DataFrame:
         rows = [
@@ -110,7 +109,6 @@ class ClassificationAggregate(MetricAggregate[ClassificationMetrics]):
 
 @dataclass(frozen=True)
 class SimilarityAggregate(MetricAggregate[SimilarityMetrics]):
-
     @override
     def to_dataframe(self) -> pd.DataFrame:
         rows = [
@@ -173,11 +171,18 @@ class SimilarityEvaluationService:
         )
 
     def evaluate(
-        self, df: pd.DataFrame, columns_to_compare: list[tuple[str, str]]
+        self,
+        df: pd.DataFrame,
+        columns_to_compare: Sequence[tuple[str, str]] | Mapping[str, tuple[str, str]],
     ) -> SimilarityAggregate:
         """Evaluate all fields and return list of similarity metrics."""
+        column_pairs = (
+            columns_to_compare.values()
+            if isinstance(columns_to_compare, Mapping)
+            else columns_to_compare
+        )
         return SimilarityAggregate(
-            metrics=[self.evaluate_field(df, columns) for columns in columns_to_compare]
+            metrics=[self.evaluate_field(df, columns) for columns in column_pairs]
         )
 
 
@@ -241,9 +246,16 @@ class ClassificationEvaluationService:
         )
 
     def evaluate(
-        self, df: pd.DataFrame, columns_to_compare: list[tuple[str, str]]
+        self,
+        df: pd.DataFrame,
+        columns_to_compare: Sequence[tuple[str, str]] | Mapping[str, tuple[str, str]],
     ) -> ClassificationAggregate:
         """Evaluate all fields and return list of classification metrics."""
+        column_pairs = (
+            columns_to_compare.values()
+            if isinstance(columns_to_compare, Mapping)
+            else columns_to_compare
+        )
         return ClassificationAggregate(
-            [self.evaluate_field(df, columns) for columns in columns_to_compare]
+            [self.evaluate_field(df, columns) for columns in column_pairs]
         )

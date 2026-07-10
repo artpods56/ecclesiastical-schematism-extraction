@@ -213,7 +213,13 @@ class TestCachedEngine:
         cached_engine.clear_stats()
 
         # Verify
-        assert cached_engine.stats == {"calls": 0, "hits": 0, "misses": 0, "errors": 0}
+        assert cached_engine.stats == {
+            "calls": 0,
+            "hits": 0,
+            "misses": 0,
+            "errors": 0,
+            "invalidations": 0,
+        }
 
     def test_wrapped_engine_access(self):
         """Test that wrapped_engine property provides access to base engine."""

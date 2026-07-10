@@ -1,0 +1,122 @@
+artifact_version: "1.0.0"
+article_title: "The Use of Advanced Digital Tools in Documentary Work on the Historical Geography of the Church"
+
+dataset:
+  repository: "artpods56/KUL_IDUB_EcclessiaSchematisms"
+  configuration: "default"
+  split: "train"
+  schematism_ids:
+    - "chelmno_1871"
+    - "chelmno_1904"
+    - "chelmno_1938"
+    - "chelmno_1939"
+    - "czestochowa_1937"
+    - "czestochowa_1939"
+    - "gniezno_1870"
+    - "gniezno_1890"
+    - "gniezno_1936"
+    - "gniezno_1938"
+    - "kielce_1874"
+    - "kielce_1938"
+    - "lodz_1938"
+    - "lomza_1938"
+    - "lublin_1870"
+    - "lublin_1938"
+    - "luck_1872"
+    - "luck_1873"
+    - "luck_1938"
+    - "lwow_1871"
+    - "lwow_1877"
+    - "lwow_1938"
+    - "pinsk_1938"
+    - "plock_1880"
+    - "plock_1882"
+    - "plock_1938"
+    - "podlasie_1938"
+    - "przemysl_1869"
+    - "przemysl_1874"
+    - "przemysl_1938"
+    - "sandomierz_1874"
+    - "sandomierz_1938"
+    - "sejny_1874"
+    - "slask_1938"
+    - "tarnow_1871"
+    - "tarnow_1938"
+    - "warszawa_1938"
+    - "wilno_1874"
+    - "wilno_1938"
+    - "wloclawek_1872"
+    - "wloclawek_1938"
+    - "zmudz_1873"
+
+vision_model:
+  provider: "openrouter"
+  model_id: "google/gemini-3-flash-preview"
+  base_url: "https://openrouter.ai/api/v1"
+  api_key_environment_variable: "OPENROUTER_API_KEY"
+  temperature: 0.1
+  top_p: 0.9
+  max_tokens: 4096
+
+ocr:
+  vision_markdown_enabled: true
+  tesseract_languages: "lat+pol+rus"
+  tesseract_role: "word_coordinates_for_layoutlmv3"
+  prompt:
+    version: "0.0.1"
+    system:
+      path: "src/notarius/infrastructure/llm/prompts/tasks/ocr/system.j2"
+      sha256: "66a217a1c286f987afffacf576ce46f67d3b7f67e62811c683d83860f14b19a2"
+    user:
+      path: "src/notarius/infrastructure/llm/prompts/tasks/ocr/user.j2"
+      sha256: "eebd66328ce5f0b2ece934bf6360a4db50dbeef18b2d4af0c1a628e49e65dd35"
+
+layoutlmv3:
+  checkpoint: "layoutlmv3_focalloss_4000"
+  enabled_for_corpus_evaluation: false
+  role: "optional_untrusted_hints"
+
+extraction:
+  task_name: "structured_extraction"
+  context_strategy: "sliding_window"
+  context_window_size: 5
+  pass_previous_page_context: true
+  pass_next_page_ocr: true
+  strip_images_from_retained_history: true
+  strip_next_page_ocr_from_retained_history: true
+  prompt:
+    version: "0.0.3"
+    system:
+      path: "src/notarius/infrastructure/llm/prompts/tasks/structured_extraction/system.j2"
+      sha256: "c9deab6b31afb40e43461a718679261d99109c50bc33875f7ca15f8bd960ece1"
+    user:
+      path: "src/notarius/infrastructure/llm/prompts/tasks/structured_extraction/user.j2"
+      sha256: "3dab201778c5df9cf7d6bb86f2893f13c5cbd1cebfa0dd2b5b9267c31cf9fd36"
+
+parsing:
+  enabled: true
+  mapping_files:
+    building_material: "data/mappings/building_material.json"
+    dedication: "data/mappings/dedication.json"
+    deanery: "data/mappings/deanery.json"
+
+alignment:
+  algorithm: "hungarian"
+  threshold: 0.5
+  weights:
+    deanery: 1.0
+    parish: 2.0
+    dedication: 1.5
+    building_material: 0.5
+
+evaluation:
+  fields:
+    - "page_number"
+    - "deanery"
+    - "parish"
+    - "dedication"
+    - "building_material"
+  source_form_scorer: "normalized_levenshtein"
+  parsed_form_scorer: "exact_match"
+  parsed_match_threshold: 1.0
+  random_seed: 42

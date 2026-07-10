@@ -93,7 +93,7 @@ def default_clients() -> dict[str, ClientConfig]:
         ),
         "openrouter": ClientConfig(
             backend="openrouter",
-            model="google/gemini-2.5-flash-preview",
+            model="google/gemini-3-flash-preview",
             base_url="https://openrouter.ai/api/v1",
             api_key_env_var="OPENROUTER_API_KEY",
             structured_output=False,

@@ -35,7 +35,6 @@ from notarius.domain.entities.messages import (
     strip_next_page_ocr_from_message,
 )
 from notarius.infrastructure.llm.conversation import Conversation
-from notarius.infrastructure.llm.utils import construct_text_message
 
 
 @dataclass
@@ -163,7 +162,6 @@ class AccumulatingStrategy(BaseContextStrategy):
         context: dict[str, Any],
         image: Image.Image | None = None,
     ) -> SequenceState:
-
         user_message = self.message_builder.build_user_message(
             "user.j2", context, image
         )
@@ -336,13 +334,20 @@ CONTEXT_STRATEGY_MAPPING: dict[ContextStrategySelection, type[BaseContextStrateg
 def get_context_strategy(
     strategy_literal: ContextStrategySelection,
     message_builder: BaseMessageBuilder,
+    sliding_window_size: int = 5,
 ) -> BaseContextStrategy:
+    if sliding_window_size < 1:
+        raise ValueError("sliding_window_size must be at least 1.")
+    if strategy_literal == "sliding_window":
+        return SlidingWindowStrategy(
+            message_builder=message_builder,
+            window_size=sliding_window_size,
+        )
     try:
         strategy_cls = CONTEXT_STRATEGY_MAPPING[strategy_literal]
-    except KeyError:
+    except KeyError as error:
         raise ValueError(
-            f"Invalid context strategy: {strategy_literal}. ",
-            f"Valid strategies: {CONTEXT_STRATEGY_MAPPING.keys()}",
-        )
-
+            f"Invalid context strategy: {strategy_literal}. "
+            f"Valid strategies: {tuple(CONTEXT_STRATEGY_MAPPING)}"
+        ) from error
     return strategy_cls(message_builder=message_builder)

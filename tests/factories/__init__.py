@@ -30,8 +30,6 @@ from tests.factories.datasets import (
     GroundTruthDatasetFactory,
     AlignedSchematismsDataItemFactory,
     AlignedDatasetFactory,
-    EvaluationDataItemFactory,
-    EvaluationDatasetFactory,
 )
 from tests.factories.messages import (
     TextContentFactory,
@@ -77,8 +75,6 @@ __all__ = [
     "GroundTruthDatasetFactory",
     "AlignedSchematismsDataItemFactory",
     "AlignedDatasetFactory",
-    "EvaluationDataItemFactory",
-    "EvaluationDatasetFactory",
     # Messages
     "TextContentFactory",
     "ImageContentFactory",

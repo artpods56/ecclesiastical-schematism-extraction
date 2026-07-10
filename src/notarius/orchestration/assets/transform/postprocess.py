@@ -35,7 +35,7 @@ from notarius.domain.entities.schematism import SchematismPage
 class AlignmentConfig(dg.Config):
     """Configuration for entry alignment operation."""
 
-    aligner_type: Literal["greedy", "hungarian"] = "greedy"
+    aligner_type: Literal["greedy", "hungarian"] = "hungarian"
     threshold: float = 0.5
     position_weight: float = 0.0  # Only used for greedy aligner
     weights: dict[str, float] = {
