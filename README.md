@@ -119,10 +119,11 @@ full suite additionally covers the inherited pipeline implementation.
 
 ## Data and licensing
 
-Source scans, complete reference data, and full model outputs are distributed
-separately through the research-data package prepared for Zenodo. This repository
-contains only the small Włocławek 1872 running example and normalization
-dictionaries needed to explain the workflow.
+Source scans, complete reference data, and full model outputs are archived in
+the [Zenodo research-data record](https://doi.org/10.5281/zenodo.21302224),
+version 1.0.0. The record metadata are public and the deposited files currently
+have restricted access. This repository contains only the small Włocławek 1872
+running example and normalization dictionaries needed to explain the workflow.
 
 Code is released under the [MIT License](LICENSE). Historical scans and research
 data retain the licenses stated in their respective data records.
@@ -130,5 +131,5 @@ data retain the licenses stated in their respective data records.
 ## Citation
 
 Use the metadata in [`CITATION.cff`](CITATION.cff) and cite the exact Git tag or
-commit used. A DOI for the accompanying research-data package should be added to
-the article and this README once the Zenodo deposition is published.
+commit used. The accompanying research-data package is available at
+[doi:10.5281/zenodo.21302224](https://doi.org/10.5281/zenodo.21302224).

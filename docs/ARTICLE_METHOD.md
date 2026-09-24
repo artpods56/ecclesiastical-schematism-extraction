@@ -31,9 +31,9 @@ alternative provider configurations, development services, and source-generation
 experiments remain in Git history for provenance; they do not define the reported
 42-schematism run.
 
-The 1529 Kraków book of endowments is a different source type discussed
-separately in the article. Its outputs must not be included when aggregating the
-42 diocesan schematisms.
+The 1529 Kraków book of endowments is a different source type and is outside the
+reported evaluation. Its outputs must not be included when aggregating the 42
+diocesan schematisms.
 
 ## Reproducibility boundary
 
